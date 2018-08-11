@@ -63,7 +63,7 @@ describe('total likes', () => {
     expect(result).toBe(7)
   })
 
-  test('of a bigger list', () => {
+  test('of full list', () => {
     const result = listHelper.totalLikes(blogs)
     expect(result).toBe(36)
   })
@@ -77,9 +77,28 @@ describe('favorite blog', () => {
     expect(result).toEqual(null)
   })
 
-  test('of a bigger list', () => {
+  test('of full list', () => {
     const result = listHelper.favoriteBlog(blogs)
     expect(result.title).toBe('Canonical string reduction')
+  })
+
+})
+
+describe('most blogs', () => {
+
+  test('of list list in null', () => {
+    const result = listHelper.mostBlogs([])
+    expect(result).toEqual(null)
+  })
+
+  test('of full list', () => {
+    const result = listHelper.mostBlogs(blogs)
+    expect(result).toEqual(
+      {
+        author: 'Robert C. Martin',
+        blogs: 3
+      }
+    )
   })
 
 })
