@@ -4,52 +4,37 @@ const app = express()
 const bodyParser = require('body-parser')
 const cors = require('cors')
 const mongoose = require('mongoose')
+const blogRouter = require('./controllers/blogs')
 
-const Blog = mongoose.model('Blog', {
-  title: String,
-  author: String,
-  url: String,
-  likes: Number
-})
-
-module.exports = Blog
 
 app.use(cors())
 app.use(bodyParser.json())
+app.use('/api/blogs', blogRouter)
 
 if (process.env.NODE_ENV !== 'production') {
-    require('dotenv').config()
-  }
-  
-  let port = process.env.PORT
-  let mongoUrl = process.env.MONGODB_URI
-  
-  if (process.env.NODE_ENV === 'test') {
-    port = process.env.TEST_PORT
-    mongoUrl = process.env.TEST_MONGODB_URI
-  }
+  require('dotenv').config()
+}
+
+let port = process.env.PORT
+let mongoUrl = process.env.MONGODB_URI
+
+if (process.env.NODE_ENV === 'test') {
+  port = process.env.TEST_PORT
+  mongoUrl = process.env.TEST_MONGODB_URI
+}
 
 mongoose.connect( mongoUrl, { useNewUrlParser: true } )
 
-app.get('/api/blogs', (request, response) => {
-  Blog
-    .find({})
-    .then(blogs => {
-      response.json(blogs)
-    })
+const server = http.createServer(app)
+
+server.listen(port, () => {
+  console.log(`Server running on port ${port}`)
 })
 
-app.post('/api/blogs', (request, response) => {
-  const blog = new Blog(request.body)
-
-  blog
-    .save()
-    .then(result => {
-      response.status(201).json(result)
-    })
+server.on('close', () => {
+  mongoose.connection.close()
 })
 
-const PORT = 3003
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`)
-})
+module.exports = {
+  app, server
+}
