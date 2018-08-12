@@ -33,7 +33,7 @@ describe('/api/blogs Tests', () => {
   describe('addition of a new blog', async () => {
 
     test('POST /api/blogs succeeds with valid data', async () => {
-      const blogsAtStart = await blogsInDb()
+      const blogsBefore = await blogsInDb()
 
       const newBlog = {
         'title': 'Test blog X',
@@ -48,11 +48,11 @@ describe('/api/blogs Tests', () => {
         .expect(200)
         .expect('Content-Type', /application\/json/)
 
-      const blogsAfterOperation = await blogsInDb()
+      const blogsAfter = await blogsInDb()
 
-      expect(blogsAfterOperation.length).toBe(blogsAtStart.length + 1)
+      expect(blogsAfter.length).toBe(blogsBefore.length + 1)
 
-      const titles = blogsAfterOperation.map(r => r.title)
+      const titles = blogsAfter.map(r => r.title)
       expect(titles).toContain('Test blog X')
     })
 
@@ -63,16 +63,16 @@ describe('/api/blogs Tests', () => {
         likes: 0
       }
 
-      const blogsAtStart = await blogsInDb()
+      const blogsBefore = await blogsInDb()
 
       await api
         .post('/api/blogs')
         .send(newBlog)
         .expect(400)
 
-      const blogsAfterOperation = await blogsInDb()
+      const blogsAfter = await blogsInDb()
 
-      expect(blogsAfterOperation.length).toBe(blogsAtStart.length)
+      expect(blogsAfter.length).toBe(blogsBefore.length)
     })
 
     test('POST /api/blogs fails with proper statuscode if url is missing', async () => {
@@ -82,16 +82,16 @@ describe('/api/blogs Tests', () => {
         likes: 0
       }
 
-      const blogsAtStart = await blogsInDb()
+      const blogsBefore = await blogsInDb()
 
       await api
         .post('/api/blogs')
         .send(newBlog)
         .expect(400)
 
-      const blogsAfterOperation = await blogsInDb()
+      const blogsAfter = await blogsInDb()
 
-      expect(blogsAfterOperation.length).toBe(blogsAtStart.length)
+      expect(blogsAfter.length).toBe(blogsBefore.length)
     })
 
     test('POST /api/blogs with likes is undefined to be made 0', async () => {
