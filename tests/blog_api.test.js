@@ -56,9 +56,30 @@ describe('/api/blogs Tests', () => {
       expect(titles).toContain('Test blog X')
     })
 
-    test('POST /api/blogs fails with proper statuscode if content is missing', async () => {
+    test('POST /api/blogs fails with proper statuscode if title is missing', async () => {
       const newBlog = {
-        title: 'By failing to prepare, you are preparing to fail'
+        url: 'https://Test4.blog.com',
+        author: 'Test bloger',
+        likes: 0
+      }
+
+      const blogsAtStart = await blogsInDb()
+
+      await api
+        .post('/api/blogs')
+        .send(newBlog)
+        .expect(400)
+
+      const blogsAfterOperation = await blogsInDb()
+
+      expect(blogsAfterOperation.length).toBe(blogsAtStart.length)
+    })
+
+    test('POST /api/blogs fails with proper statuscode if url is missing', async () => {
+      const newBlog = {
+        title: 'By failing to prepare, you are preparing to fail',
+        author: 'Test bloger',
+        likes: 0
       }
 
       const blogsAtStart = await blogsInDb()
@@ -75,9 +96,9 @@ describe('/api/blogs Tests', () => {
 
     test('POST /api/blogs with likes is undefined to be made 0', async () => {
       const newBlog = {
-        'title': 'Test blog X',
-        'author': 'Test bloger',
-        'url': 'https://TestX.blog.com',
+        title: 'Test blog X',
+        author: 'Test bloger',
+        url: 'https://TestX.blog.com',
       }
 
       const response = await api
