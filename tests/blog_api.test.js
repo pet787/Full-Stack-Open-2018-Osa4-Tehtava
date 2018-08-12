@@ -5,7 +5,7 @@ const Blog = require('../models/blog')
 const { initialBlogs, nonExistingId, blogsInDb } = require('./test_helper')
 
 
-describe('API Tests', () => {
+describe('/api/blogs Tests', () => {
 
   beforeAll(async () => {
     await Blog.remove({})
@@ -14,25 +14,64 @@ describe('API Tests', () => {
     await Promise.all(blogObjects.map(n => n.save()))
   })
 
-  test('blogs are returned as json', async () => {
-    await api
+  test('all blogss are returned as json by GET /api/blogs', async () => {
+    const blogsInDatabase = await blogsInDb()
+
+    const response = await api
       .get('/api/blogs')
       .expect(200)
       .expect('Content-Type', /application\/json/)
+
+    expect(response.body.length).toBe(blogsInDatabase.length)
+
+    const returnedTitles = response.body.map(n => n.title)
+    blogsInDatabase.forEach(blog => {
+      expect(returnedTitles).toContain(blog.title)
+    })
   })
 
-  test('there are four blogs', async () => {
-    const response = await api
-      .get('/api/blogs')
+  describe('addition of a new blog', async () => {
 
-    expect(response.body.length).toBe(5)
-  })
+    test('POST /api/blogs succeeds with valid data', async () => {
+      const blogsAtStart = await blogsInDb()
 
-  test('the first blog author is Test bloger', async () => {
-    const response = await api
-      .get('/api/blogs')
+      const newBlog = {
+        'title': 'Test blog X',
+        'author': 'Test bloger',
+        'url': 'https://TestX.blog.com',
+        'likes': 10
+      }
 
-    expect(response.body[0].author).toBe('Test bloger')
+      await api
+        .post('/api/blogs')
+        .send(newBlog)
+        .expect(200)
+        .expect('Content-Type', /application\/json/)
+
+      const blogsAfterOperation = await blogsInDb()
+
+      expect(blogsAfterOperation.length).toBe(blogsAtStart.length + 1)
+
+      const titles = blogsAfterOperation.map(r => r.title)
+      expect(titles).toContain('Test blog X')
+    })
+
+    test('POST /api/blogs fails with proper statuscode if content is missing', async () => {
+      const newBlog = {
+        title: 'By failing to prepare, you are preparing to fail'
+      }
+
+      const blogsAtStart = await blogsInDb()
+
+      await api
+        .post('/api/blogs')
+        .send(newBlog)
+        .expect(400)
+
+      const blogsAfterOperation = await blogsInDb()
+
+      expect(blogsAfterOperation.length).toBe(blogsAtStart.length)
+    })
   })
 
   afterAll(() => {
