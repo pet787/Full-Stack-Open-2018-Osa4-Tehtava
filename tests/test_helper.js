@@ -37,7 +37,6 @@ const nonExistingId = async () => {
   const blog = new Blog()
   await blog.save()
   await blog.remove()
-
   return blog._id.toString()
 }
 

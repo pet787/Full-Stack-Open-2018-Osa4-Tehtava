@@ -110,6 +110,34 @@ describe('/api/blogs Tests', () => {
       expect(response.body.likes).toBe(0)
     })
 
+    describe('deletion of a blog', async () => {
+      let addedBlog
+
+      beforeAll(async () => {
+        addedBlog = new Blog({
+          title: 'TEST HTTP DELETE',
+          author: 'nobody',
+          url: 'https://TestX.blog.com'
+        })
+        await addedBlog.save()
+      })
+
+      test('DELETE /api/blogs/:id succeeds with proper statuscode', async () => {
+        const blogsBefore = await blogsInDb()
+
+        await api
+          .delete(`/api/blogs/${addedBlog._id}`)
+          .expect(204)
+
+        const blogsAfter = await blogsInDb()
+
+        const titles = blogsAfter.map(r => r.title)
+
+        expect(titles).not.toContain(addedBlog.title)
+        expect(blogsAfter.length).toBe(blogsBefore.length - 1)
+      })
+    })
+
   })
 
   afterAll(() => {
