@@ -72,6 +72,23 @@ describe('/api/blogs Tests', () => {
 
       expect(blogsAfterOperation.length).toBe(blogsAtStart.length)
     })
+
+    test('POST /api/blogs with likes is undefined to be made 0', async () => {
+      const newBlog = {
+        'title': 'Test blog X',
+        'author': 'Test bloger',
+        'url': 'https://TestX.blog.com',
+      }
+
+      const response = await api
+        .post('/api/blogs')
+        .send(newBlog)
+        .expect(200)
+        .expect('Content-Type', /application\/json/)
+
+      expect(response.body.likes).toBe(0)
+    })
+
   })
 
   afterAll(() => {
