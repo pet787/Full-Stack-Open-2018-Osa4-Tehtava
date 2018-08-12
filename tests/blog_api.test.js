@@ -36,10 +36,10 @@ describe('/api/blogs Tests', () => {
       const blogsBefore = await blogsInDb()
 
       const newBlog = {
-        'title': 'Test blog X',
-        'author': 'Test bloger',
-        'url': 'https://TestX.blog.com',
-        'likes': 10
+        title: 'Test blog X',
+        author: 'Test bloger',
+        url: 'https://TestX.blog.com',
+        likes: 10
       }
 
       await api
@@ -135,6 +135,36 @@ describe('/api/blogs Tests', () => {
 
         expect(titles).not.toContain(addedBlog.title)
         expect(blogsAfter.length).toBe(blogsBefore.length - 1)
+      })
+    })
+
+    describe('modifying of a blog', async () => {
+      let originalBlog
+
+      beforeAll(async () => {
+        originalBlog = new Blog({
+          title: 'TEST HTTP PUT',
+          author: 'nobody',
+          url: 'https://TestX.blog.com',
+          likes: 1
+        })
+        await originalBlog.save()
+      })
+
+      test('PUT /api/blogs/:id succeeds with proper statuscode', async () => {
+
+        const modifiedBlog = {
+          title: 'Test blog X',
+          author: 'Test bloger',
+          url: 'https://TestX.blog.com',
+          likes: 99
+        }
+        const response = await api
+          .put(`/api/blogs/${originalBlog._id}`)
+          .send(modifiedBlog)
+          .expect(200)
+
+        expect(response.body.likes).toBe(99)
       })
     })
 
