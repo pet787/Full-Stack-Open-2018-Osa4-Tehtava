@@ -50,73 +50,76 @@ const blogs = [
     __v: 0
   }
 ]
+describe.skip('skip', () => {
 
-describe('total likes', () => {
+  describe('total likes', () => {
 
-  test('of empty list is zero', () => {
-    const result = listHelper.totalLikes([])
-    expect(result).toBe(0)
+    test('of empty list is zero', () => {
+      const result = listHelper.totalLikes([])
+      expect(result).toBe(0)
+    })
+
+    test('of one blog', () => {
+      const result = listHelper.totalLikes([blogs[0]])
+      expect(result).toBe(7)
+    })
+
+    test('of full list', () => {
+      const result = listHelper.totalLikes(blogs)
+      expect(result).toBe(36)
+    })
+
   })
 
-  test('of one blog', () => {
-    const result = listHelper.totalLikes([blogs[0]])
-    expect(result).toBe(7)
+  describe('favorite blog', () => {
+
+    test('of empty list is null', () => {
+      const result = listHelper.favoriteBlog([])
+      expect(result).toEqual(null)
+    })
+
+    test('of full list', () => {
+      const result = listHelper.favoriteBlog(blogs)
+      expect(result.title).toBe('Canonical string reduction')
+    })
+
   })
 
-  test('of full list', () => {
-    const result = listHelper.totalLikes(blogs)
-    expect(result).toBe(36)
+  describe('most blogs', () => {
+
+    test('of list is null', () => {
+      const result = listHelper.mostBlogs([])
+      expect(result).toEqual(null)
+    })
+
+    test('of full list', () => {
+      const result = listHelper.mostBlogs(blogs)
+      expect(result).toEqual(
+        {
+          author: 'Robert C. Martin',
+          blogs: 3
+        }
+      )
+    })
+
   })
 
-})
+  describe('most likes', () => {
 
-describe('favorite blog', () => {
+    test('of list is null', () => {
+      const result = listHelper.mostLikes([])
+      expect(result).toEqual(null)
+    })
 
-  test('of empty list is null', () => {
-    const result = listHelper.favoriteBlog([])
-    expect(result).toEqual(null)
+    test('of full list', () => {
+      const result = listHelper.mostLikes(blogs)
+      expect(result).toEqual(
+        {
+          author: 'Edsger W. Dijkstra',
+          likes: 17
+        }
+      )
+    })
   })
 
-  test('of full list', () => {
-    const result = listHelper.favoriteBlog(blogs)
-    expect(result.title).toBe('Canonical string reduction')
-  })
-
-})
-
-describe('most blogs', () => {
-
-  test('of list is null', () => {
-    const result = listHelper.mostBlogs([])
-    expect(result).toEqual(null)
-  })
-
-  test('of full list', () => {
-    const result = listHelper.mostBlogs(blogs)
-    expect(result).toEqual(
-      {
-        author: 'Robert C. Martin',
-        blogs: 3
-      }
-    )
-  })
-
-})
-
-describe('most likes', () => {
-
-  test('of list is null', () => {
-    const result = listHelper.mostLikes([])
-    expect(result).toEqual(null)
-  })
-
-  test('of full list', () => {
-    const result = listHelper.mostLikes(blogs)
-    expect(result).toEqual(
-      {
-        author: 'Edsger W. Dijkstra',
-        likes: 17
-      }
-    )
-  })
 })

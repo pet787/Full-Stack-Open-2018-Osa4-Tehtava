@@ -23,9 +23,10 @@ app.use(cors())
 app.use(bodyParser.json())
 app.use(express.static('build'))
 app.use(middleware.logger)
-app.use(middleware.error)
 
 app.use('/api/blogs', blogRouter)
+
+app.use(middleware.error)
 
 const server = http.createServer(app)
 
