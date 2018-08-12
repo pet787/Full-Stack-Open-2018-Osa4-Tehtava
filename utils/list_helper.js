@@ -35,8 +35,7 @@ const mostBlogs = (blogs) => {
   }
 
   const matchAuthor = (author) => (blog) => {
-    const result = blog.author === author
-    return result
+    return blog.author === author
   }
 
   const creditAuthor = (author) => (blog) => {
@@ -51,7 +50,7 @@ const mostBlogs = (blogs) => {
     }
   }
 
-  const selectAuthors = ( authorList, nextBlog ) => {
+  const sumAuthors = ( authorList, nextBlog ) => {
     const author = nextBlog.author
     const authorFound = authorList.find( matchAuthor( author ) )
     if ( authorFound === undefined ) {
@@ -74,12 +73,61 @@ const mostBlogs = (blogs) => {
     }
   }
 
-  const authors = blogs.reduce( selectAuthors, [] )
+  const authors = blogs.reduce( sumAuthors, [] )
   const bestAuthor = authors.reduce( maxBlogs )
-  console.log(authors)
+  return bestAuthor
+}
+
+const mostLikes = (blogs) => {
+
+  if (blogs === null || blogs.length === 0) {
+    return null
+  }
+
+  const matchAuthor = (author) => (blog) => {
+    return blog.author === author
+  }
+
+  const creditAuthor = (author, likes) => (blog) => {
+    if (author === blog.author ) {
+      return {
+        author: author,
+        likes: likes + blog.likes
+      }
+    } else {
+      return blog
+    }
+  }
+
+  const sumAuthors = ( authorList, nextBlog ) => {
+    const author = nextBlog.author
+    const likes = nextBlog.likes
+    const authorFound = authorList.find( matchAuthor( author ) )
+    if ( authorFound === undefined ) {
+      return authorList.concat(
+        {
+          author: author,
+          likes: likes
+        }
+      )
+    } else {
+      return authorList.map( creditAuthor( author, likes ) )
+    }
+  }
+
+  const maxLikes = ( highBlog, nextBlog ) => {
+    if ( nextBlog.likes > highBlog.likes ) {
+      return nextBlog
+    } else {
+      return highBlog
+    }
+  }
+
+  const authors = blogs.reduce( sumAuthors, [] )
+  const bestAuthor = authors.reduce( maxLikes )
   return bestAuthor
 }
 
 module.exports = {
-  totalLikes, favoriteBlog, mostBlogs
+  totalLikes, favoriteBlog, mostBlogs, mostLikes
 }

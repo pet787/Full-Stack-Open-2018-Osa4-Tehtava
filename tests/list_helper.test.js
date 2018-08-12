@@ -86,7 +86,7 @@ describe('favorite blog', () => {
 
 describe('most blogs', () => {
 
-  test('of list list in null', () => {
+  test('of list is null', () => {
     const result = listHelper.mostBlogs([])
     expect(result).toEqual(null)
   })
@@ -101,4 +101,22 @@ describe('most blogs', () => {
     )
   })
 
+})
+
+describe('most likes', () => {
+
+  test('of list is null', () => {
+    const result = listHelper.mostLikes([])
+    expect(result).toEqual(null)
+  })
+
+  test('of full list', () => {
+    const result = listHelper.mostLikes(blogs)
+    expect(result).toEqual(
+      {
+        author: 'Edsger W. Dijkstra',
+        likes: 17
+      }
+    )
+  })
 })
