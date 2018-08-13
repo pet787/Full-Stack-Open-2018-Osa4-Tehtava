@@ -7,7 +7,7 @@ const { initialBlogs, initialUsers, blogsInDb, usersInDb } = require('./test_hel
 
 describe('/api Tests', async () => {
 
-  describe.skip('/api/blogs Tests', async () => {
+  describe('/api/blogs Tests', async () => {
 
     beforeAll(async () => {
       await Blog.remove({})

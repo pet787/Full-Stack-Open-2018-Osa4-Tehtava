@@ -1,8 +1,11 @@
 const blogsRouter = require('express').Router()
 const Blog = require('../models/blog')
+const User = require('../models/user')
 
 blogsRouter.get('/', async (request, response) => {
-  const blogs = await Blog.find({})
+  const blogs = await Blog
+    .find({})
+    .populate('user', { username: 1, name: 1, _id: 0 } )
   response.json(blogs.map(Blog.format))
 })
 
@@ -20,14 +23,22 @@ blogsRouter.post('/', async (request, response) => {
       return response.status(400).json({ error: 'url missing' })
     }
 
-    const blog = new Blog(request.body)
+    const user = await User.findOne( {} )
+    const blog = new Blog({
+      title: body.title,
+      author: body.author,
+      url: body.url,
+      likes: body.likes,
+      user: user._id
+    })
+
     const savedBlog = await blog.save()
     response.json(Blog.format(savedBlog))
   } catch(exception) {
     if (exception.name === 'JsonWebTokenError' ) {
       response.status(401).json({ error: exception.message })
     } else {
-      console.log(exception)
+      //      console.log(exception)
       response.status(500).json({ error: 'something went wrong...' })
     }
   }
