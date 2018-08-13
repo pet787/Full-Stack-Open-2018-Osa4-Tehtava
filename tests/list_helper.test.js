@@ -50,7 +50,7 @@ const blogs = [
     __v: 0
   }
 ]
-describe.skip('skip', () => {
+describe('skip', () => {
 
   describe('total likes', () => {
 

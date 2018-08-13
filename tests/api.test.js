@@ -5,15 +5,47 @@ const Blog = require('../models/blog')
 const User = require('../models/user')
 const { initialBlogs, initialUsers, blogsInDb, usersInDb } = require('./test_helper')
 
+let tokenUser1
+let tokenUser2
+
 describe('/api Tests', async () => {
 
   describe('/api/blogs Tests', async () => {
 
     beforeAll(async () => {
-      await Blog.remove({})
+      await User.remove({})
+      const userObjects = initialUsers.map(n => new User(n))
+      await Promise.all(userObjects.map(n => n.save()))
 
+      await Blog.remove({})
       const blogObjects = initialBlogs.map(n => new Blog(n))
       await Promise.all(blogObjects.map(n => n.save()))
+
+      const login1 = {
+        username: 'UN1',
+        password: 'PW1'
+      }
+
+      const response1 = await api
+        .post('/api/login')
+        .send(login1)
+        .expect(200)
+        .expect('Content-Type', /application\/json/)
+
+      tokenUser1 = response1.body.token
+
+      const login2 = {
+        username: 'UN2',
+        password: 'PW1'
+      }
+
+      const response2 = await api
+        .post('/api/login')
+        .send(login2)
+        .expect(200)
+        .expect('Content-Type', /application\/json/)
+
+      tokenUser2 = response2.body.token
     })
 
     describe('all blogs', async () => {
@@ -36,24 +68,7 @@ describe('/api Tests', async () => {
 
     })
 
-    describe('blogs management', async () => {
-
-      let token
-
-      test('POST /api/login', async () => {
-        const login = {
-          username: 'UN1',
-          password: 'PW1'
-        }
-
-        const response = await api
-          .post('/api/login')
-          .send(login)
-          .expect(200)
-          .expect('Content-Type', /application\/json/)
-
-        token = response.body.token
-      })
+    describe('blogs', async () => {
 
       test('POST /api/blogs succeeds with valid data', async () => {
         const blogsBefore = await blogsInDb()
@@ -65,9 +80,9 @@ describe('/api Tests', async () => {
           likes: 10
         }
 
-        await api
+        const response = await api
           .post('/api/blogs')
-          .set( 'Authorization', 'bearer ' + token )
+          .set( 'Authorization', 'bearer ' + tokenUser1 )
           .send(newBlog)
           .expect(200)
           .expect('Content-Type', /application\/json/)
@@ -91,7 +106,7 @@ describe('/api Tests', async () => {
 
         await api
           .post('/api/blogs')
-          .set( 'Authorization', 'bearer ' + token )
+          .set( 'Authorization', 'bearer ' + tokenUser1 )
           .send(newBlog)
           .expect(400)
 
@@ -111,7 +126,7 @@ describe('/api Tests', async () => {
 
         await api
           .post('/api/blogs')
-          .set( 'Authorization', 'bearer ' + token )
+          .set( 'Authorization', 'bearer ' + tokenUser1 )
           .send(newBlog)
           .expect(400)
 
@@ -119,6 +134,8 @@ describe('/api Tests', async () => {
 
         expect(blogsAfter.length).toBe(blogsBefore.length)
       })
+
+      let addedBlog
 
       test('POST /api/blogs with likes is undefined to be made 0', async () => {
         const newBlog = {
@@ -129,33 +146,34 @@ describe('/api Tests', async () => {
 
         const response = await api
           .post('/api/blogs')
-          .set( 'Authorization', 'bearer ' + token )
+          .set( 'Authorization', 'bearer ' + tokenUser1 )
           .send(newBlog)
           .expect(200)
           .expect('Content-Type', /application\/json/)
 
         expect(response.body.likes).toBe(0)
+        addedBlog = response.body
       })
 
-      let addedBlog
+      test('DELETE /api/blogs/:id fails with wrong user', async () => {
+        const blogsBefore = await blogsInDb()
 
-      beforeAll(async () => {
-        addedBlog = new Blog({
-          title: 'TEST HTTP DELETE',
-          author: 'nobody',
-          url: 'https://TestX.blog.com'
-        })
-        await addedBlog
-          .set( 'Authorization', 'bearer ' + token )
-          .save()
+        await api
+          .delete(`/api/blogs/${addedBlog.id}`)
+          .set( 'Authorization', 'bearer ' + tokenUser2 )
+          .expect(400)
+
+        const blogsAfter = await blogsInDb()
+
+        expect(blogsAfter.length).toBe(blogsBefore.length)
       })
 
       test('DELETE /api/blogs/:id succeeds with proper statuscode', async () => {
         const blogsBefore = await blogsInDb()
 
         await api
-          .delete(`/api/blogs/${addedBlog._id}`)
-          .set( 'Authorization', 'bearer ' + token )
+          .delete(`/api/blogs/${addedBlog.id}`)
+          .set( 'Authorization', 'bearer ' + tokenUser1 )
           .expect(204)
 
         const blogsAfter = await blogsInDb()

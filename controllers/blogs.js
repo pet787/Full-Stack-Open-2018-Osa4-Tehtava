@@ -3,14 +3,6 @@ const Blog = require('../models/blog')
 const User = require('../models/user')
 const jwt = require('jsonwebtoken')
 
-const getTokenFrom = (request) => {
-  const authorization = request.get('authorization')
-  if (authorization && authorization.toLowerCase().startsWith('bearer ')) {
-    return authorization.substring(7)
-  }
-  return null
-}
-
 blogsRouter.get('/', async (request, response) => {
   const blogs = await Blog
     .find({})
@@ -31,9 +23,7 @@ blogsRouter.post('/', async (request, response) => {
     if (body.url === undefined) {
       return response.status(400).json({ error: 'url missing' })
     }
-
-    const token = getTokenFrom(request)
-    console.log('token',token)
+    const token = request.token
     const decodedToken = jwt.verify(token, process.env.SECRET)
 
     if (!token || !decodedToken.id) {
@@ -55,7 +45,7 @@ blogsRouter.post('/', async (request, response) => {
     if (exception.name === 'JsonWebTokenError' ) {
       response.status(401).json({ error: exception.message })
     } else {
-      //      console.log(exception)
+      console.log(exception)
       response.status(500).json({ error: 'something went wrong...' })
     }
   }
@@ -63,11 +53,28 @@ blogsRouter.post('/', async (request, response) => {
 
 blogsRouter.delete('/:id', async (request, response) => {
   try {
+    const token = request.token
+    const decodedToken = jwt.verify(token, process.env.SECRET)
+    if (!token || !decodedToken.id) {
+      return response.status(401).json({ error: 'token missing or invalid' })
+    }
+    const blogId = request.params.id
+    const blog = await Blog.findById(blogId)
+    const blogOwner = blog.user.toString()
+    const tokenOwner = decodedToken.id
+    if (blogOwner !== tokenOwner ){
+      return response.status(400).send({ error: 'blog not owned by user' })
+    }
+
     await Blog.findByIdAndRemove(request.params.id)
     response.status(204).end()
   } catch (exception) {
-    console.log(exception)
-    response.status(400).send({ error: 'malformatted id' })
+    if (exception.name === 'JsonWebTokenError' ) {
+      response.status(401).json({ error: exception.message })
+    } else {
+      console.log(exception)
+      response.status(400).send({ error: 'malformatted id' })
+    }
   }
 })
 
