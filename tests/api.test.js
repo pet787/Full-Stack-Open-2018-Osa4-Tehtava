@@ -16,29 +16,50 @@ describe('/api Tests', async () => {
       await Promise.all(blogObjects.map(n => n.save()))
     })
 
-    test('all blogs are returned as json by GET /api/blogs', async () => {
-      const blogsInDatabase = await blogsInDb()
+    describe('all blogs', async () => {
 
-      const response = await api
-        .get('/api/blogs')
-        .expect(200)
-        .expect('Content-Type', /application\/json/)
+      test('all blogs are returned as json by GET /api/blogs', async () => {
+        const blogsInDatabase = await blogsInDb()
 
-      expect(response.body.length).toBe(blogsInDatabase.length)
+        const response = await api
+          .get('/api/blogs')
+          .expect(200)
+          .expect('Content-Type', /application\/json/)
 
-      const returnedTitles = response.body.map(n => n.title)
-      blogsInDatabase.forEach(blog => {
-        expect(returnedTitles).toContain(blog.title)
+        expect(response.body.length).toBe(blogsInDatabase.length)
+
+        const returnedTitles = response.body.map(n => n.title)
+        blogsInDatabase.forEach(blog => {
+          expect(returnedTitles).toContain(blog.title)
+        })
       })
+
     })
 
-    describe('addition of a new blog', async () => {
+    describe('blogs management', async () => {
+
+      let token
+
+      test('POST /api/login', async () => {
+        const login = {
+          username: 'UN1',
+          password: 'PW1'
+        }
+
+        const response = await api
+          .post('/api/login')
+          .send(login)
+          .expect(200)
+          .expect('Content-Type', /application\/json/)
+
+        token = response.body.token
+      })
 
       test('POST /api/blogs succeeds with valid data', async () => {
         const blogsBefore = await blogsInDb()
 
         const newBlog = {
-          title: 'Test blog X',
+          title: 'POST /api/blogs succeeds with valid data',
           author: 'Test bloger',
           url: 'https://TestX.blog.com',
           likes: 10
@@ -46,6 +67,7 @@ describe('/api Tests', async () => {
 
         await api
           .post('/api/blogs')
+          .set( 'Authorization', 'bearer ' + token )
           .send(newBlog)
           .expect(200)
           .expect('Content-Type', /application\/json/)
@@ -55,7 +77,7 @@ describe('/api Tests', async () => {
         expect(blogsAfter.length).toBe(blogsBefore.length + 1)
 
         const titles = blogsAfter.map(r => r.title)
-        expect(titles).toContain('Test blog X')
+        expect(titles).toContain('POST /api/blogs succeeds with valid data')
       })
 
       test('POST /api/blogs fails with proper statuscode if title is missing', async () => {
@@ -69,6 +91,7 @@ describe('/api Tests', async () => {
 
         await api
           .post('/api/blogs')
+          .set( 'Authorization', 'bearer ' + token )
           .send(newBlog)
           .expect(400)
 
@@ -88,6 +111,7 @@ describe('/api Tests', async () => {
 
         await api
           .post('/api/blogs')
+          .set( 'Authorization', 'bearer ' + token )
           .send(newBlog)
           .expect(400)
 
@@ -98,13 +122,14 @@ describe('/api Tests', async () => {
 
       test('POST /api/blogs with likes is undefined to be made 0', async () => {
         const newBlog = {
-          title: 'Test blog X',
+          title: 'POST /api/blogs with likes is undefined to be made 0',
           author: 'Test bloger',
           url: 'https://TestX.blog.com',
         }
 
         const response = await api
           .post('/api/blogs')
+          .set( 'Authorization', 'bearer ' + token )
           .send(newBlog)
           .expect(200)
           .expect('Content-Type', /application\/json/)
@@ -112,62 +137,61 @@ describe('/api Tests', async () => {
         expect(response.body.likes).toBe(0)
       })
 
-      describe('deletion of a blog', async () => {
-        let addedBlog
+      let addedBlog
 
-        beforeAll(async () => {
-          addedBlog = new Blog({
-            title: 'TEST HTTP DELETE',
-            author: 'nobody',
-            url: 'https://TestX.blog.com'
-          })
-          await addedBlog.save()
+      beforeAll(async () => {
+        addedBlog = new Blog({
+          title: 'TEST HTTP DELETE',
+          author: 'nobody',
+          url: 'https://TestX.blog.com'
         })
-
-        test('DELETE /api/blogs/:id succeeds with proper statuscode', async () => {
-          const blogsBefore = await blogsInDb()
-
-          await api
-            .delete(`/api/blogs/${addedBlog._id}`)
-            .expect(204)
-
-          const blogsAfter = await blogsInDb()
-
-          const titles = blogsAfter.map(r => r.title)
-
-          expect(titles).not.toContain(addedBlog.title)
-          expect(blogsAfter.length).toBe(blogsBefore.length - 1)
-        })
+        await addedBlog
+          .set( 'Authorization', 'bearer ' + token )
+          .save()
       })
 
-      describe('modifying of a blog', async () => {
-        let originalBlog
+      test('DELETE /api/blogs/:id succeeds with proper statuscode', async () => {
+        const blogsBefore = await blogsInDb()
 
-        beforeAll(async () => {
-          originalBlog = new Blog({
-            title: 'TEST HTTP PUT',
-            author: 'nobody',
-            url: 'https://TestX.blog.com',
-            likes: 1
-          })
-          await originalBlog.save()
+        await api
+          .delete(`/api/blogs/${addedBlog._id}`)
+          .set( 'Authorization', 'bearer ' + token )
+          .expect(204)
+
+        const blogsAfter = await blogsInDb()
+
+        const titles = blogsAfter.map(r => r.title)
+
+        expect(titles).not.toContain(addedBlog.title)
+        expect(blogsAfter.length).toBe(blogsBefore.length - 1)
+      })
+
+      let originalBlog
+
+      beforeAll(async () => {
+        originalBlog = new Blog({
+          title: 'TEST HTTP PUT',
+          author: 'nobody',
+          url: 'https://TestX.blog.com',
+          likes: 1
         })
+        await originalBlog.save()
+      })
 
-        test('PUT /api/blogs/:id succeeds with proper statuscode', async () => {
+      test('PUT /api/blogs/:id succeeds with proper statuscode', async () => {
 
-          const modifiedBlog = {
-            title: 'Test blog X',
-            author: 'Test bloger',
-            url: 'https://TestX.blog.com',
-            likes: 99
-          }
-          const response = await api
-            .put(`/api/blogs/${originalBlog._id}`)
-            .send(modifiedBlog)
-            .expect(200)
+        const modifiedBlog = {
+          title: 'Modifying of a blog',
+          author: 'Test bloger',
+          url: 'https://TestX.blog.com',
+          likes: 99
+        }
+        const response = await api
+          .put(`/api/blogs/${originalBlog._id}`)
+          .send(modifiedBlog)
+          .expect(200)
 
-          expect(response.body.likes).toBe(99)
-        })
+        expect(response.body.likes).toBe(99)
       })
 
     })
@@ -183,7 +207,7 @@ describe('/api Tests', async () => {
       await Promise.all(userObjects.map(n => n.save()))
     })
 
-    test('all users are returned as json by GET /api/blogs', async () => {
+    test('all users are returned as json by GET /api/users', async () => {
       const usersInDatabase = await usersInDb()
 
       const response = await api
@@ -264,19 +288,6 @@ describe('/api Tests', async () => {
       const usersAfterOperation = await usersInDb()
       expect(result.body).toEqual({ error: 'passwords minimum length is 3' })
       expect(usersAfterOperation.length).toBe(usersBeforeOperation.length)
-    })
-
-    test('POST /api/login', async () => {
-      const login = {
-        username: 'UN1',
-        password: 'PW1'
-      }
-
-      await api
-        .post('/api/login')
-        .send(login)
-        .expect(200)
-        .expect('Content-Type', /application\/json/)
     })
 
   })
