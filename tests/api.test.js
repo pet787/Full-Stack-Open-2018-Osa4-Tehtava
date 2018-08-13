@@ -266,6 +266,19 @@ describe('/api Tests', async () => {
       expect(usersAfterOperation.length).toBe(usersBeforeOperation.length)
     })
 
+    test('POST /api/login', async () => {
+      const login = {
+        username: 'UN1',
+        password: 'PW1'
+      }
+
+      await api
+        .post('/api/login')
+        .send(login)
+        .expect(200)
+        .expect('Content-Type', /application\/json/)
+    })
+
   })
 
   afterAll(() => {

@@ -37,8 +37,9 @@ const initialBlogs = [
 const initialUsers = [
   {
     username: 'UN1',
-    name: 'name1',
-    adult: true
+    name: 'N1',
+    adult: true,
+    passwordHash: '$2b$10$mUfve5kE1II6JZ3Ph2660.vXOebq.Mw/vYC5wyMfSyiEbQL1DuXNS',
   },
   {
     username: 'UN2',
