@@ -15,10 +15,16 @@ usersRouter.post( '/', async ( request, response ) => {
     if (body.password === undefined) {
       return response.status(400).json({ error: 'password missing' })
     }
-
+    if (body.password.length < 3) {
+      return response.status(400).json({ error: 'passwords minimum length is 3' })
+    }
     const existingUser = await User.find({ username: body.username })
     if ( existingUser.length > 0 ) {
       return response.status( 400 ).json({ error: 'username must be unique' })
+    }
+    let adult = body.adult
+    if (adult===undefined) {
+      adult = true
     }
 
     const saltRounds = 10
@@ -27,7 +33,7 @@ usersRouter.post( '/', async ( request, response ) => {
     const user = new User({
       username: body.username,
       name: body.name,
-      adult: body.adult,
+      adult: adult,
       passwordHash
     })
 
